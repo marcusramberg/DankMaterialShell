@@ -11,6 +11,8 @@ import (
 	"github.com/AvengeMedia/DankMaterialShell/core/internal/greeter"
 	"github.com/AvengeMedia/DankMaterialShell/core/internal/log"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var greeterCmd = &cobra.Command{
@@ -258,7 +260,8 @@ func disableDisplayManager(dmName string) (bool, error) {
 		} else if shouldDisable {
 			return actionTaken, fmt.Errorf("%s is still in state '%s' after %s operation", dmName, enabledState, actionVerb)
 		} else {
-			fmt.Printf("  ✓ %s %s (now: %s)\n", strings.Title(actionVerb), dmName, enabledState)
+			t := cases.Title(language.English)
+			fmt.Printf("  ✓ %s %s (now: %s)\n", t.String(actionVerb), dmName, enabledState)
 		}
 
 		actionTaken = true
@@ -517,7 +520,7 @@ func enableGreeter() error {
 	newConfig := strings.Join(finalLines, "\n")
 
 	tmpFile := "/tmp/greetd-config.toml"
-	if err := os.WriteFile(tmpFile, []byte(newConfig), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte(newConfig), 0o644); err != nil {
 		return fmt.Errorf("failed to write temp config: %w", err)
 	}
 

@@ -11,6 +11,8 @@ import (
 	"github.com/AvengeMedia/DankMaterialShell/core/internal/errdefs"
 	"github.com/AvengeMedia/DankMaterialShell/core/internal/log"
 	"github.com/godbus/dbus/v5"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -30,8 +32,10 @@ type SecretAgent struct {
 	backend *NetworkManagerBackend
 }
 
-type nmVariantMap map[string]dbus.Variant
-type nmSettingMap map[string]nmVariantMap
+type (
+	nmVariantMap map[string]dbus.Variant
+	nmSettingMap map[string]nmVariantMap
+)
 
 const introspectXML = `
 <node>
@@ -620,11 +624,12 @@ func vpnFieldMeta(field, vpnService string) (label string, isSecret bool) {
 	case "private-key-password":
 		return "Private Key Password", true
 	}
+	t := cases.Title(language.English)
 	if strings.HasSuffix(field, "password") || strings.HasSuffix(field, "secret") ||
 		strings.HasSuffix(field, "pass") || strings.HasSuffix(field, "psk") {
-		return strings.Title(strings.ReplaceAll(field, "-", " ")), true
+		return t.String(strings.ReplaceAll(field, "-", " ")), true
 	}
-	return strings.Title(strings.ReplaceAll(field, "-", " ")), false
+	return t.String(strings.ReplaceAll(field, "-", " ")), false
 }
 
 func readVPNPasswordFlags(conn map[string]nmVariantMap, settingName string) uint32 {
