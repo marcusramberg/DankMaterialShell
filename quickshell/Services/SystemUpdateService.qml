@@ -263,7 +263,7 @@ Singleton {
         running: refCount > 0 && distributionSupported && (pkgManager || updChecker)
         onTriggered: checkForUpdates()
     }
-    
+
     IpcHandler {
         target: "systemupdater"
 

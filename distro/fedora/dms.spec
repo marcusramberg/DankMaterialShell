@@ -67,8 +67,8 @@ URL:            https://github.com/AvengeMedia/dgop
 Provides:       dgop
 
 %description -n dgop
-DGOP is a stateless system monitoring tool that provides CPU, GPU, memory, and 
-network statistics. Designed for integration with DankMaterialShell but can be 
+DGOP is a stateless system monitoring tool that provides CPU, GPU, memory, and
+network statistics. Designed for integration with DankMaterialShell but can be
 used standalone. This package always includes the latest stable dgop release.
 
 %prep
