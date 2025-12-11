@@ -7,6 +7,10 @@
       url = "github:AvengeMedia/dgop";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     quickshell = {
       url = "git+https://git.outfoxxed.me/quickshell/quickshell?rev=26531fc46ef17e9365b03770edd3fb9206fcb460";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -183,6 +187,19 @@
             '';
 
             QML2_IMPORT_PATH = mkQmlImportPath pkgs devQmlPkgs;
+          };
+        }
+      );
+
+      checks = forEachSystem (
+        system: pkgs: {
+          default = pkgs.callPackage ./distro/nix/test.nix {
+            modules = [
+              self.inputs.home-manager.nixosModules.home-manager
+              self.nixosModules.dankMaterialShell
+              self.nixosModules.greeter
+            ];
+            homeModule = self.homeModules.dankMaterialShell.default;
           };
         }
       );
