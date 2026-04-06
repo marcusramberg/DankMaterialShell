@@ -1,6 +1,7 @@
 package clipboard
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -298,7 +299,7 @@ func copyServeWithWriter(writeTo func(io.Writer) error, mimeType string, pasteOn
 		defer syscall.Close(e.Fd)
 		file := os.NewFile(uintptr(e.Fd), "pipe")
 		defer file.Close()
-		if err := writeTo(file); err != nil {
+		if err := writeTo(file); err != nil && !errors.Is(err, syscall.EPIPE) {
 			select {
 			case sendErr <- err:
 			default:
