@@ -27,8 +27,8 @@ FloatingWindow {
 
     objectName: "windowRuleModal"
     title: isEditMode ? I18n.tr("Edit Window Rule") : I18n.tr("Create Window Rule")
-    minimumSize: Qt.size(500, 600)
-    maximumSize: Qt.size(500, 600)
+    minimumSize: Qt.size(400, 600)
+    maximumSize: Qt.size(400, 600)
     color: Theme.surfaceContainer
     visible: false
 
