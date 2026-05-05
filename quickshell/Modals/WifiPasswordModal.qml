@@ -11,7 +11,7 @@ DankModal {
     keepPopoutsOpen: true
     allowStacking: true
     shouldBeVisible: false
-    modalWidth: 420
+    modalWidth: 400
     modalHeight: calculatedHeight
     enableShadow: true
     onBackgroundClicked: clearAndClose()

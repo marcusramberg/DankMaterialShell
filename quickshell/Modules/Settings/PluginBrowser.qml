@@ -501,7 +501,7 @@ DankFloatingWindow {
 
     objectName: "pluginBrowser"
     title: I18n.tr("Browse Plugins", "plugin browser window title")
-    minimumSize: Qt.size(520, 460)
+    minimumSize: Qt.size(400, 460)
     implicitWidth: {
         const maxWidth = screen ? screen.width - 120 : 1500;
         if (parentModal && parentModal.width > 0)

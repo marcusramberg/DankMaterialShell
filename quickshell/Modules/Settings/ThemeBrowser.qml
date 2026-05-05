@@ -218,7 +218,7 @@ DankFloatingWindow {
 
     objectName: "themeBrowser"
     title: I18n.tr("Browse Themes", "theme browser window title")
-    minimumSize: Qt.size(550, 450)
+    minimumSize: Qt.size(400, 450)
     implicitWidth: 700
     implicitHeight: 700
     visible: false

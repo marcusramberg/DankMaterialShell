@@ -100,7 +100,7 @@ DankFloatingWindow {
 
     objectName: "settingsModal"
     title: I18n.tr("Settings", "settings window title")
-    minimumSize: Qt.size(500, 400)
+    minimumSize: Qt.size(400, 400)
     implicitWidth: 900
     implicitHeight: screen ? Math.min(940, screen.height - 100) : 940
     visible: false
