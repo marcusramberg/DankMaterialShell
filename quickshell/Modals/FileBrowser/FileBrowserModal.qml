@@ -34,7 +34,7 @@ FloatingWindow {
 
     objectName: "fileBrowserModal"
     title: "Files - " + browserTitle
-    minimumSize: Qt.size(500, 400)
+    minimumSize: Qt.size(400, 400)
     implicitWidth: 800
     implicitHeight: 600
     color: Theme.surfaceContainer

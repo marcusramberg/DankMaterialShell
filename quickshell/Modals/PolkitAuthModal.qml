@@ -97,8 +97,8 @@ FloatingWindow {
 
     objectName: "polkitAuthModal"
     title: I18n.tr("Authentication")
-    minimumSize: Qt.size(460, 220)
-    maximumSize: Qt.size(460, 220)
+    minimumSize: Qt.size(400, 220)
+    maximumSize: Qt.size(400, 220)
     color: Theme.surfaceContainer
     visible: false
 

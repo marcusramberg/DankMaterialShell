@@ -252,8 +252,8 @@ FloatingWindow {
             return I18n.tr("Hidden Network");
         return I18n.tr("Wi-Fi Password");
     }
-    minimumSize: Qt.size(420, calculatedHeight)
-    maximumSize: Qt.size(420, calculatedHeight)
+    minimumSize: Qt.size(400, calculatedHeight)
+    maximumSize: Qt.size(400, calculatedHeight)
     color: Theme.surfaceContainer
     visible: false
 

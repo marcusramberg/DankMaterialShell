@@ -51,7 +51,7 @@ DankPopout {
         StateUtils.toggleSection(root, section);
     }
 
-    popupWidth: 550
+    popupWidth: 400
     popupHeight: {
         const screenHeight = (triggerScreen?.height ?? 1080);
         const maxHeight = screenHeight - 100;
