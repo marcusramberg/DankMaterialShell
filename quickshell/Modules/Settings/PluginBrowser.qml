@@ -529,7 +529,6 @@ RegistryBrowserWindow {
     title: I18n.tr("Browse plugins", "plugin browser window title")
     headerTitle: I18n.tr("Browse plugins")
     searchPlaceholder: I18n.tr("Search plugins...", "plugin search placeholder")
-
     function pendingInstallId() {
         return PopoutService.pendingPluginInstall || "";
     }

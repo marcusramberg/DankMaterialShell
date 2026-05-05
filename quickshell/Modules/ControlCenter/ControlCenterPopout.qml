@@ -90,6 +90,35 @@ DankPopout {
         expandedSection = "";
     }
 
+    onEditModeChanged: {
+        if (editMode) {
+            collapseAll();
+        }
+        queueTargetPopupHeightUpdate();
+    }
+
+    onVisibleChanged: {
+        if (!visible) {
+            collapseAll();
+        }
+    }
+
+    readonly property color _containerBg: Theme.nestedSurface
+
+    // Defer open one tick so screen-change geometry settles before the surface
+    // maps; a synchronous open churns the surface and loses the blur on a switch.
+    function present() {
+        Qt.callLater(open);
+    }
+
+    function openWithSection(section) {
+        StateUtils.openWithSection(root, section);
+    }
+
+    function toggleSection(section) {
+        StateUtils.toggleSection(root, section);
+    }
+
     popupWidth: sheetContentWidth
     popupHeight: Math.min(_maxPopupHeight(), Math.max(CcMetrics.minHeight, contentLoader.item?.targetImplicitHeight ?? CcMetrics.minHeight))
     triggerWidth: CcMetrics.triggerWidth
