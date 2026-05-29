@@ -74,7 +74,11 @@ Item {
 
     WallpaperBackground {}
 
-    DesktopWidgetLayer {}
+    Loader {
+        active: !MobileMode.active
+        asynchronous: false
+        sourceComponent: DesktopWidgetLayer {}
+    }
 
     Lock {
         id: lock
@@ -169,11 +173,13 @@ Item {
     property bool barSurfacesLoaded: true
 
     function recreateBarSurfaces() {
-        log.info("Recreating bar surfaces, screens:", Quickshell.screens.length,
-                 Quickshell.screens.map(s => s.name).join(","));
+        log.info("Recreating bar surfaces, screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","));
         if (barSurfacesLoaded)
             barSurfacesLoaded = false;
         barSurfaceReloadAction.schedule();
+        if (MobileMode.active) {
+            root.recreateMobileSurfaces();
+        }
     }
 
     DeferredAction {
@@ -223,7 +229,7 @@ Item {
     property bool frameSurfacesLoaded: true
 
     Loader {
-        active: root.frameSurfacesLoaded
+        active: root.frameSurfacesLoaded && !MobileMode.active
         asynchronous: false
         sourceComponent: Frame {}
     }
@@ -246,7 +252,7 @@ Item {
             id: barLoader
             required property var modelData
             property var barConfig: SettingsData.barConfigs.find(cfg => cfg.id === modelData.id) || null
-            active: root.barSurfacesLoaded && (barConfig?.enabled ?? false)
+            active: root.barSurfacesLoaded && (barConfig?.enabled ?? false) && !MobileMode.active
             asynchronous: false
 
             sourceComponent: DankBar {
@@ -336,12 +342,7 @@ Item {
     }
 
     function triggerSurfaceRecovery(source) {
-        log.info("Surface recovery triggered by:", source,
-                 "screens:", Quickshell.screens.length,
-                 Quickshell.screens.map(s => s.name).join(","),
-                 "barLoaded:", root.barSurfacesLoaded,
-                 "frameLoaded:", root.frameSurfacesLoaded,
-                 "dockEnabled:", root.dockEnabled);
+        log.info("Surface recovery triggered by:", source, "screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","), "barLoaded:", root.barSurfacesLoaded, "frameLoaded:", root.frameSurfacesLoaded, "dockEnabled:", root.dockEnabled);
         surfaceResumeRecoveryTimer.pass = 0;
         surfaceResumeRecoveryTimer.interval = 800;
         surfaceResumeRecoveryTimer.restart();
@@ -352,15 +353,11 @@ Item {
         function onScreensChanged() {
             const hasReal = root._hasRealScreen();
             const currentNames = root._getRealScreenNames();
-            log.info("Screens changed:", Quickshell.screens.length,
-                     Quickshell.screens.map(s => "'" + s.name + "'").join(","),
-                     "hasReal:", hasReal, "hadReal:", root.hadRealScreen);
+            log.info("Screens changed:", Quickshell.screens.length, Quickshell.screens.map(s => "'" + s.name + "'").join(","), "hasReal:", hasReal, "hadReal:", root.hadRealScreen);
             const fullReconnect = !root.hadRealScreen && hasReal;
-            const partialReconnect = root.previousRealScreenNames.length > 0
-                && currentNames.some(name => !root.previousRealScreenNames.includes(name));
+            const partialReconnect = root.previousRealScreenNames.length > 0 && currentNames.some(name => !root.previousRealScreenNames.includes(name));
             if (fullReconnect || partialReconnect) {
-                log.info("Screen reconnect detected, triggering surface recovery",
-                         "full:", fullReconnect, "partial:", partialReconnect);
+                log.info("Screen reconnect detected, triggering surface recovery", "full:", fullReconnect, "partial:", partialReconnect);
                 root.triggerSurfaceRecovery("screen-reconnect");
             }
             root.hadRealScreen = hasReal;
@@ -375,9 +372,7 @@ Item {
         property int pass: 0
         onTriggered: {
             pass++;
-            log.info("Surface recovery pass", pass,
-                     "screens:", Quickshell.screens.length,
-                     Quickshell.screens.map(s => s.name).join(","));
+            log.info("Surface recovery pass", pass, "screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","));
 
             root.recreateBarSurfaces();
 
@@ -412,7 +407,7 @@ Item {
 
     Loader {
         id: dockLoader
-        active: root.dockEnabled
+        active: root.dockEnabled && !MobileMode.active
         asynchronous: false
 
         property var currentPosition: SettingsData.dockPosition
@@ -987,11 +982,7 @@ Item {
         target: SessionService
 
         function onSessionResumed() {
-            log.info("Session resumed: screens:", Quickshell.screens.length,
-                     Quickshell.screens.map(s => s.name).join(","),
-                     "barLoaded:", root.barSurfacesLoaded,
-                     "frameLoaded:", root.frameSurfacesLoaded,
-                     "dockEnabled:", root.dockEnabled);
+            log.info("Session resumed: screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","), "barLoaded:", root.barSurfacesLoaded, "frameLoaded:", root.frameSurfacesLoaded, "dockEnabled:", root.dockEnabled);
 
             root.pendingOsdResumeReloads = 2;
             osdResumeRecreateTimer.interval = 400;
@@ -1310,7 +1301,7 @@ Item {
 
     LazyLoader {
         id: hyprlandOverviewLoader
-        active: CompositorService.isHyprland
+        active: CompositorService.isHyprland && !MobileMode.active
         component: HyprlandOverview {
             id: hyprlandOverview
         }
@@ -1318,10 +1309,54 @@ Item {
 
     LazyLoader {
         id: niriOverviewOverlayLoader
-        active: CompositorService.isNiri && SettingsData.niriOverviewOverlayEnabled
+        active: CompositorService.isNiri && SettingsData.niriOverviewOverlayEnabled && !MobileMode.active
         component: NiriOverviewOverlay {
             id: niriOverviewOverlay
         }
+    }
+
+    property bool mobileSurfacesLoaded: true
+
+    function recreateMobileSurfaces() {
+        if (mobileSurfacesLoaded) {
+            log.info("Recreating mobile surfaces, screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","));
+            mobileSurfacesLoaded = false;
+            mobileSurfaceReloadAction.schedule();
+        }
+    }
+
+    DeferredAction {
+        id: mobileSurfaceReloadAction
+        onTriggered: root.mobileSurfacesLoaded = true
+    }
+
+    Loader {
+        id: mobileTopBarLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/Mobile/MobileTopBar.qml"
+
+        onLoaded: {
+            item.swipeLeftDown.connect(() => notifCenterMobileLoader.item?.toggle());
+            item.swipeRightDown.connect(() => controlCenterMobileLoader.item?.toggle());
+        }
+    }
+
+    Loader {
+        id: mobileHomeBarLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/Mobile/MobileHomeBar.qml"
+    }
+
+    Loader {
+        id: notifCenterMobileLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/Notifications/Center/NotificationCenterMobile.qml"
+    }
+
+    Loader {
+        id: controlCenterMobileLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/ControlCenter/ControlCenterMobile.qml"
     }
 
     Loader {
