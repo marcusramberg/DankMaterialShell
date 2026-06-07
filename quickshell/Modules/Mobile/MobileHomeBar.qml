@@ -11,7 +11,7 @@ PanelWindow {
 
     WlrLayershell.namespace: "dms:mobile-home-bar"
     WlrLayershell.layer: WlrLayershell.Top
-    WlrLayershell.exclusiveZone: 0
+    WlrLayershell.exclusiveZone: 14
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
     screen: Quickshell.screens[0]
@@ -20,7 +20,7 @@ PanelWindow {
     anchors.bottom: true
     anchors.left: true
     anchors.right: true
-    implicitHeight: 60
+    implicitHeight: 14
 
     MouseArea {
         anchors.fill: parent
