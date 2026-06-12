@@ -22,6 +22,8 @@ PanelWindow {
     anchors.right: true
     implicitHeight: 14
 
+    signal openLauncher
+
     MouseArea {
         anchors.fill: parent
         propagateComposedEvents: true
@@ -50,7 +52,7 @@ PanelWindow {
                 return;
             }
             if (_startY - mouse.y > 60 && Math.abs(mouse.x - _startX) < 30) {
-                PopoutService.toggleDankLauncherV2(false);
+                root.openLauncher();
             } else if (_startX - mouse.x > 60 && Math.abs(mouse.y - _startY) < 30) {
                 NiriService.moveColumnRight();
             } else if (mouse.x - _startX > 60 && Math.abs(mouse.y - _startY) < 30) {
