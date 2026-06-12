@@ -1347,6 +1347,19 @@ Item {
         source: "Modules/Mobile/MobileHomeBar.qml"
     }
 
+    Connections {
+        target: mobileHomeBarLoader.item
+        function onOpenLauncher() {
+            mobileLauncherLoader.item?.toggle();
+        }
+    }
+
+    Loader {
+        id: mobileLauncherLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/Mobile/MobileLauncher.qml"
+    }
+
     Loader {
         id: notifCenterMobileLoader
         active: MobileMode.active && root.mobileSurfacesLoaded
