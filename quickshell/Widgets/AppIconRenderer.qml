@@ -24,6 +24,9 @@ Item {
     property real fallbackTopMargin: 0
     property real fallbackBottomMargin: 0
 
+    readonly property real _dpr: Screen.devicePixelRatio > 0 ? Screen.devicePixelRatio : 1
+    readonly property int _iconDecodeSize: Math.max(1, Math.ceil(iconSize * _dpr))
+
     readonly property bool isMaterial: iconValue && iconValue.startsWith("material:")
     readonly property bool isUnicode: iconValue && iconValue.startsWith("unicode:")
     readonly property bool isSvgCorner: iconValue && iconValue.startsWith("svg+corner:")
@@ -96,8 +99,11 @@ Item {
         sourceComponent: IconImage {
             anchors.fill: parent
             source: root.iconPath
-            backer.sourceSize: Qt.size(root.iconSize * 2, root.iconSize * 2)
-            mipmap: true
+            backer.sourceSize: Qt.size(root._iconDecodeSize, root._iconDecodeSize)
+            // Only generate mipmaps when the decode is heavily oversampled
+            // (>2x the physical display size). At correct sourceSize this is
+            // false, avoiding pointless GPU mipmap generation per icon.
+            mipmap: root._iconDecodeSize > Math.ceil(root.iconSize * root._dpr) * 2
             asynchronous: true
             visible: status === Image.Ready
         }

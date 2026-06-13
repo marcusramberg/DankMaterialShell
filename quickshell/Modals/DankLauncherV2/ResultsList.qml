@@ -204,6 +204,8 @@ Item {
             clip: true
             scrollBarTopMargin: (root.controller?.sections?.length > 0) ? 32 : 0
 
+            reuseItems: true
+
             model: ScriptModel {
                 values: root._visualRows
                 objectProp: "_rowId"
