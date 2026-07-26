@@ -25,25 +25,17 @@ PanelWindow {
     anchors.right: true
 
     property bool _open: false
+    property bool _mappedVisible: false
 
-    // Keep the layer surface mapped at all times. Toggling `visible` would
-    // destroy/recreate the wlr_layer_surface, and the trailing unmap commit
-    // trips a smithay pre_commit_hook bug that kills the whole client.
-    visible: true
-
-    // Surface stays mapped, so drop the input region when closed to let touches
-    // pass through to apps below.
-    mask: _open ? null : _noInputRegion
-    Region {
-        id: _noInputRegion
-    }
+    visible: _mappedVisible
 
     function toggle() {
         if (_open) {
             _open = false
         } else {
-            _open = true
+            _mappedVisible = true
             Qt.callLater(() => {
+                _open = true
                 for (var i = 0; i < appController.sectionDefinitions.length; i++) {
                     appController.setSectionViewMode(appController.sectionDefinitions[i].id, "grid");
                 }
@@ -92,6 +84,11 @@ PanelWindow {
                 id: slideAnim
                 duration: Theme.mediumDuration
                 easing.bezierCurve: Theme.variantPopoutEnterCurve
+
+                onRunningChanged: {
+                    if (!running && !root._open)
+                        root._mappedVisible = false
+                }
             }
         }
 
