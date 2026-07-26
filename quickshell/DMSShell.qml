@@ -1341,24 +1341,24 @@ Item {
         }
     }
 
-    Loader {
-        id: mobileHomeBarLoader
-        active: MobileMode.active && root.mobileSurfacesLoaded
-        source: "Modules/Mobile/MobileHomeBar.qml"
-    }
+    // Loader {
+    //     id: mobileHomeBarLoader
+    //     active: MobileMode.active && root.mobileSurfacesLoaded
+    //     source: "Modules/Mobile/MobileHomeBar.qml"
+    // }
 
-    Connections {
-        target: mobileHomeBarLoader.item
-        function onOpenLauncher() {
-            mobileLauncherLoader.item?.toggle();
-        }
-    }
+    // Connections {
+    //     target: mobileHomeBarLoader.item
+    //     function onOpenLauncher() {
+    //         mobileLauncherLoader.item?.toggle();
+    //     }
+    // }
 
-    Loader {
-        id: mobileLauncherLoader
-        active: MobileMode.active && root.mobileSurfacesLoaded
-        source: "Modules/Mobile/MobileLauncher.qml"
-    }
+    // Loader {
+    //     id: mobileLauncherLoader
+    //     active: MobileMode.active && root.mobileSurfacesLoaded
+    //     source: "Modules/Mobile/MobileLauncher.qml"
+    // }
 
     Loader {
         id: notifCenterMobileLoader
