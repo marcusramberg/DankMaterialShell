@@ -947,6 +947,12 @@ Column {
                     }
                     builtinInstance = Qt.binding(() => root.model?.displayProfilesBuiltinInstance);
                 }
+                if (id === "builtin_cellular") {
+                    if (root.model?.cellularLoader) {
+                        root.model.cellularLoader.active = true;
+                    }
+                    builtinInstance = Qt.binding(() => root.model?.cellularBuiltinInstance);
+                }
             }
 
             sourceComponent: {

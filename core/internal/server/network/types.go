@@ -152,6 +152,7 @@ type PriorityUpdate struct {
 
 type Manager struct {
 	backend               Backend
+	cellular              *CellularManager
 	state                 *NetworkState
 	stateMutex            sync.RWMutex
 	subscribers           syncmap.Map[string, chan NetworkState]

@@ -44,6 +44,7 @@ Singleton {
     signal connectionStateChanged
 
     signal networkStateUpdate(var data)
+    signal cellularStateUpdate(var data)
     signal cupsStateUpdate(var data)
     signal loginctlStateUpdate(var data)
     signal capabilitiesReceived
@@ -345,6 +346,8 @@ Singleton {
             capabilitiesReceived();
         } else if (service === "network") {
             networkStateUpdate(data);
+        } else if (service === "network.cellular") {
+            cellularStateUpdate(data);
         } else if (service === "network.credentials") {
             credentialsRequest(data);
         } else if (service === "loginctl") {

@@ -15,6 +15,8 @@ func HandleRequest(conn net.Conn, req models.Request, manager *Manager) {
 	switch req.Method {
 	case "network.getState":
 		handleGetState(conn, req, manager)
+	case "network.cellular.getState":
+		handleGetCellularState(conn, req, manager)
 	case "network.wifi.scan":
 		handleScanWiFi(conn, req, manager)
 	case "network.wifi.networks":
@@ -128,6 +130,15 @@ func handleCredentialsCancel(conn net.Conn, req models.Request, manager *Manager
 
 func handleGetState(conn net.Conn, req models.Request, manager *Manager) {
 	models.Respond(conn, req.ID, manager.GetState())
+}
+
+func handleGetCellularState(conn net.Conn, req models.Request, manager *Manager) {
+	state := manager.GetCellularState()
+	if state == nil {
+		models.RespondError(conn, req.ID, "ModemManager not available")
+		return
+	}
+	models.Respond(conn, req.ID, state)
 }
 
 func handleScanWiFi(conn net.Conn, req models.Request, manager *Manager) {

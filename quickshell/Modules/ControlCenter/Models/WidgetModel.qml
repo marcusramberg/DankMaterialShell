@@ -12,6 +12,7 @@ QtObject {
     property var cupsBuiltinInstance: null
     property var tailscaleBuiltinInstance: null
     property var displayProfilesBuiltinInstance: null
+    property var cellularBuiltinInstance: null
 
     property var vpnLoader: Loader {
         active: false
@@ -117,6 +118,34 @@ QtObject {
                 if (!hasWidget && displayProfilesLoader.active) {
                     root.log.debug("No Display Profiles widget in control center, deactivating loader");
                     displayProfilesLoader.active = false;
+                }
+            }
+        }
+    }
+
+    property var cellularLoader: Loader {
+        active: false
+        sourceComponent: Component {
+            CellularWidget {}
+        }
+
+        onItemChanged: {
+            root.cellularBuiltinInstance = item;
+        }
+
+        onActiveChanged: {
+            if (!active)
+                root.cellularBuiltinInstance = null;
+        }
+
+        Connections {
+            target: SettingsData
+            function onControlCenterWidgetsChanged() {
+                const widgets = SettingsData.controlCenterWidgets || [];
+                const hasWidget = widgets.some(w => w.id === "builtin_cellular");
+                if (!hasWidget && cellularLoader.active) {
+                    root.log.debug("No Cellular widget in control center, deactivating loader");
+                    cellularLoader.active = false;
                 }
             }
         }
@@ -279,6 +308,16 @@ QtObject {
             "icon": "monitor",
             "type": "builtin_plugin",
             "enabled": true,
+            "isBuiltinPlugin": true
+        },
+        {
+            "id": "builtin_cellular",
+            "text": I18n.tr("Cellular"),
+            "description": I18n.tr("Mobile data signal strength"),
+            "icon": "signal_cellular_alt",
+            "type": "builtin_plugin",
+            "enabled": CellularService.available,
+            "warning": !CellularService.available ? I18n.tr("ModemManager not available") : undefined,
             "isBuiltinPlugin": true
         }
     ]

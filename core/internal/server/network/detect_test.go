@@ -13,6 +13,18 @@ func TestBackendType_Constants(t *testing.T) {
 	assert.Equal(t, BackendType(2), BackendIwd)
 	assert.Equal(t, BackendType(3), BackendConnMan)
 	assert.Equal(t, BackendType(4), BackendNetworkd)
+	assert.Equal(t, BackendType(100), BackendModemManager)
+}
+
+func TestDetectResult_HasModemManagerField(t *testing.T) {
+	result := &DetectResult{
+		Backend:         BackendNetworkManager,
+		HasNM:           true,
+		HasModemManager: true,
+	}
+
+	assert.True(t, result.HasModemManager)
+	assert.True(t, result.HasNM)
 }
 
 func TestDetectResult_HasNetworkdField(t *testing.T) {

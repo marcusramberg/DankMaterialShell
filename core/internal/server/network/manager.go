@@ -95,6 +95,18 @@ func NewManager() (*Manager, error) {
 		return nil, fmt.Errorf("failed to start monitoring: %w", err)
 	}
 
+	// Optionally attach the ModemManager cellular subsystem. It coexists with
+	// the primary backend and does not take over WiFi/Ethernet duties.
+	if detection.HasModemManager {
+		cellular := NewCellularManager(NewModemManagerBackend())
+		if err := cellular.Start(); err != nil {
+			log.Warnf("failed to initialize ModemManager cellular: %v", err)
+		} else {
+			m.cellular = cellular
+			log.Infof("ModemManager cellular subsystem enabled")
+		}
+	}
+
 	return m, nil
 }
 
@@ -295,6 +307,33 @@ func (m *Manager) GetState() NetworkState {
 	return m.snapshotState()
 }
 
+// GetCellularState returns the current ModemManager cellular state, or nil if
+// no ModemManager daemon was detected at startup.
+func (m *Manager) GetCellularState() *CellularState {
+	if m.cellular == nil {
+		return nil
+	}
+	s := m.cellular.GetState()
+	return &s
+}
+
+func (m *Manager) HasCellular() bool {
+	return m.cellular != nil
+}
+
+func (m *Manager) SubscribeCellular(id string) chan CellularState {
+	if m.cellular == nil {
+		return nil
+	}
+	return m.cellular.Subscribe(id)
+}
+
+func (m *Manager) UnsubscribeCellular(id string) {
+	if m.cellular != nil {
+		m.cellular.Unsubscribe(id)
+	}
+}
+
 func (m *Manager) Subscribe(id string) chan NetworkState {
 	ch := make(chan NetworkState, 64)
 	m.subscribers.Store(id, ch)
@@ -402,6 +441,10 @@ func (m *Manager) Close() {
 
 	if m.backend != nil {
 		m.backend.Close()
+	}
+
+	if m.cellular != nil {
+		m.cellular.Close()
 	}
 
 	m.subscribers.Range(func(key string, ch chan NetworkState) bool {

@@ -875,6 +875,9 @@ func checkOptionalDependencies() []checkResult {
 
 	results = append(results, checkResult{catOptionalFeatures, "Network", networkStatus, networkMessage, networkDetails, optionalFeaturesURL})
 
+	mmStatus, mmMsg := getOptionalDBusStatus("org.freedesktop.ModemManager1")
+	results = append(results, checkResult{catOptionalFeatures, "ModemManager", mmStatus, mmMsg, "Cellular / mobile data", optionalFeaturesURL})
+
 	deps := []struct {
 		name, cmd, desc string
 		important       bool

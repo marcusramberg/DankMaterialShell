@@ -120,6 +120,12 @@ Item {
                 }
                 builtinInstance = widgetModel.displayProfilesBuiltinInstance;
             }
+            if (builtinId === "builtin_cellular") {
+                if (widgetModel?.cellularLoader) {
+                    widgetModel.cellularLoader.active = true;
+                }
+                builtinInstance = widgetModel.cellularBuiltinInstance;
+            }
 
             if (!builtinInstance || !builtinInstance.ccDetailContent) {
                 return;

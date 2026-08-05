@@ -117,3 +117,6 @@ quickshell/dms-plugins
 __pycache__
 
 .vscode/
+
+# Built binary
+core/dms

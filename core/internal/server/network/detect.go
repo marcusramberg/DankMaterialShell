@@ -16,6 +16,11 @@ const (
 	BackendNetworkd
 )
 
+// BackendModemManager is a supplementary cellular backend. It is not chosen as
+// the primary network Backend (ModemManager coexists with NM/iwd for WiFi and
+// Ethernet); it only gates whether the cellular subsystem is enabled.
+const BackendModemManager BackendType = 100
+
 func nameHasOwner(bus *dbus.Conn, name string) (bool, error) {
 	obj := bus.Object("org.freedesktop.DBus", "/org/freedesktop/DBus")
 	var owned bool
@@ -26,13 +31,14 @@ func nameHasOwner(bus *dbus.Conn, name string) (bool, error) {
 }
 
 type DetectResult struct {
-	Backend      BackendType
-	HasNM        bool
-	HasIwd       bool
-	HasConnMan   bool
-	HasWpaSupp   bool
-	HasNetworkd  bool
-	ChosenReason string
+	Backend         BackendType
+	HasNM           bool
+	HasIwd          bool
+	HasConnMan      bool
+	HasWpaSupp      bool
+	HasNetworkd     bool
+	HasModemManager bool
+	ChosenReason    string
 }
 
 func DetectNetworkStack() (*DetectResult, error) {
@@ -47,13 +53,15 @@ func DetectNetworkStack() (*DetectResult, error) {
 	hasConn, _ := nameHasOwner(bus, "net.connman")
 	hasWpa, _ := nameHasOwner(bus, "fi.w1.wpa_supplicant1")
 	hasNetworkd, _ := nameHasOwner(bus, "org.freedesktop.network1")
+	hasModemManager, _ := nameHasOwner(bus, "org.freedesktop.ModemManager1")
 
 	res := &DetectResult{
-		HasNM:       hasNM,
-		HasIwd:      hasIwd,
-		HasConnMan:  hasConn,
-		HasWpaSupp:  hasWpa,
-		HasNetworkd: hasNetworkd,
+		HasNM:           hasNM,
+		HasIwd:          hasIwd,
+		HasConnMan:      hasConn,
+		HasWpaSupp:      hasWpa,
+		HasNetworkd:     hasNetworkd,
+		HasModemManager: hasModemManager,
 	}
 
 	switch {

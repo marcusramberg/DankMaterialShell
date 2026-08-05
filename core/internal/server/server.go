@@ -412,6 +412,9 @@ func getCapabilities() Capabilities {
 
 	if networkManager != nil {
 		caps = append(caps, "network")
+		if networkManager.HasCellular() {
+			caps = append(caps, "cellular")
+		}
 	}
 
 	if loginctlManager != nil {
@@ -478,6 +481,9 @@ func getServerInfo() ServerInfo {
 
 	if networkManager != nil {
 		caps = append(caps, "network")
+		if networkManager.HasCellular() {
+			caps = append(caps, "cellular")
+		}
 	}
 
 	if loginctlManager != nil {
@@ -670,6 +676,40 @@ func handleSubscribe(conn net.Conn, req models.Request) {
 					}
 					select {
 					case eventChan <- ServiceEvent{Service: "network.credentials", Data: prompt}:
+					case <-stopChan:
+						return
+					}
+				case <-stopChan:
+					return
+				}
+			}
+		}()
+	}
+
+	if shouldSubscribe("network.cellular") && networkManager != nil && networkManager.GetCellularState() != nil {
+		wg.Add(1)
+		cellChan := networkManager.SubscribeCellular(clientID + "-cellular")
+		go func() {
+			defer wg.Done()
+			defer networkManager.UnsubscribeCellular(clientID + "-cellular")
+
+			initialState := networkManager.GetCellularState()
+			if initialState != nil {
+				select {
+				case eventChan <- ServiceEvent{Service: "network.cellular", Data: initialState}:
+				case <-stopChan:
+					return
+				}
+			}
+
+			for {
+				select {
+				case state, ok := <-cellChan:
+					if !ok {
+						return
+					}
+					select {
+					case eventChan <- ServiceEvent{Service: "network.cellular", Data: state}:
 					case <-stopChan:
 						return
 					}
