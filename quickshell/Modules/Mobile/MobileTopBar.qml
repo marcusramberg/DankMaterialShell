@@ -32,6 +32,11 @@ PanelWindow {
         precision: SystemClock.Minutes
     }
 
+    IdleInhibitor {
+        window: root
+        enabled: SessionService.idleInhibited
+    }
+
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property bool mediaPlaying: activePlayer !== null && activePlayer.playbackState === MprisPlaybackState.Playing
 

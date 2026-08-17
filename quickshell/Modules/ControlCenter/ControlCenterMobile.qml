@@ -7,7 +7,9 @@ import qs.Common
 import qs.Services
 import qs.Widgets
 import qs.Modules.ControlCenter.Components
+import qs.Modules.ControlCenter.Details
 import qs.Modules.ControlCenter.Models
+import "./utils/state.js" as StateUtils
 
 PanelWindow {
     id: root
@@ -15,7 +17,9 @@ PanelWindow {
     WlrLayershell.namespace: "dms:control-center-mobile"
     WlrLayershell.layer: WlrLayershell.Overlay
     WlrLayershell.exclusiveZone: -1
-    WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // A modal on top of us (the power menu) needs the keys, and it cannot get
+    // them while we hold an exclusive grab.
+    WlrLayershell.keyboardFocus: _open && !powerMenuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     screen: Quickshell.screens[0]
     color: "transparent"
@@ -28,6 +32,21 @@ PanelWindow {
     property bool _open: false
     property bool _mappedVisible: false
     property bool editMode: false
+
+    /// Which widget's detail pane (bluetooth device list, wifi networks, audio
+    /// outputs, …) is expanded, and the widget it belongs to. DragDropGrid
+    /// renders the pane itself; it just needs the state held for it.
+    property string expandedSection: ""
+    property int expandedWidgetIndex: -1
+    property var expandedWidgetData: null
+
+    readonly property bool powerMenuOpen: PopoutService.powerMenuModal?.shouldBeVisible ?? false
+
+    /// Set by DMSShell, which owns the modal. Without it the colour-picker
+    /// widgets in the grid have nothing to open.
+    property var colorPickerModal: null
+
+    signal powerMenuRequested
 
     visible: _mappedVisible
 
@@ -42,9 +61,32 @@ PanelWindow {
         }
     }
 
+    function collapseAll() {
+        expandedSection = ""
+        expandedWidgetIndex = -1
+        expandedWidgetData = null
+    }
+
+    function toggleSection(section) {
+        StateUtils.toggleSection(root, section)
+    }
+
+    on_OpenChanged: {
+        if (!_open)
+            collapseAll()
+    }
+
+    onEditModeChanged: {
+        if (editMode)
+            collapseAll()
+    }
+
     Keys.onEscapePressed: {
-        if (_open)
+        if (expandedSection !== "") {
+            collapseAll()
+        } else if (_open) {
             _open = false
+        }
     }
 
     WidgetModel {
@@ -119,7 +161,11 @@ PanelWindow {
                     width: parent.width
                     editMode: root.editMode
                     onEditModeToggled: root.editMode = !root.editMode
-                    onLockRequested: root._open = false
+                    onLockRequested: {
+                        root._open = false
+                        IdleService.lockRequested()
+                    }
+                    onPowerButtonClicked: root.powerMenuRequested()
                     onSettingsButtonClicked: root._open = false
                 }
 
@@ -128,18 +174,31 @@ PanelWindow {
                     width: parent.width
                     editMode: root.editMode
                     maxPopoutHeight: root.height - 100
-                    expandedSection: ""
-                    expandedWidgetIndex: -1
-                    expandedWidgetData: null
+                    expandedSection: root.expandedSection
+                    expandedWidgetIndex: root.expandedWidgetIndex
+                    expandedWidgetData: root.expandedWidgetData
                     model: widgetModel
+                    bluetoothCodecSelector: bluetoothCodecSelector
+                    colorPickerModal: root.colorPickerModal
                     screenName: root.screen?.name || ""
                     screenModel: root.screen?.model || ""
                     parentScreen: root.screen
-                    onExpandClicked: (widgetData, globalIndex) => {}
+                    onExpandClicked: (widgetData, globalIndex) => {
+                        root.expandedWidgetIndex = globalIndex
+                        root.expandedWidgetData = widgetData
+                        if (widgetData.id === "diskUsage") {
+                            root.toggleSection("diskUsage_" + (widgetData.instanceId || "default"))
+                        } else if (widgetData.id === "brightnessSlider") {
+                            root.toggleSection("brightnessSlider_" + (widgetData.instanceId || "default"))
+                        } else {
+                            root.toggleSection(widgetData.id)
+                        }
+                    }
                     onRemoveWidget: index => widgetModel.removeWidget(index)
                     onMoveWidget: (fromIndex, toIndex) => widgetModel.moveWidget(fromIndex, toIndex)
                     onToggleWidgetSize: index => widgetModel.toggleWidgetSize(index)
-                    onCollapseRequested: {}
+                    onCollapseRequested: root.collapseAll()
+                    onConfigRequested: (idx, data, anchor) => widgetConfigOverlay.open(idx, data, anchor)
                 }
 
                 EditControls {
@@ -162,6 +221,17 @@ PanelWindow {
                     onClearAll: () => widgetModel.clearAll()
                 }
             }
+        }
+
+        BluetoothCodecSelector {
+            id: bluetoothCodecSelector
+            anchors.fill: parent
+            z: 10000
+        }
+
+        WidgetConfigOverlay {
+            id: widgetConfigOverlay
+            anchors.fill: parent
         }
 
         MouseArea {
