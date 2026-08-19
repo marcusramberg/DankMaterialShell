@@ -19,7 +19,7 @@ SHELL_INSTALL_DIR=$(DATA_DIR)/quickshell/dms
 ASSETS_DIR=assets
 APPLICATIONS_DIR=$(DATA_DIR)/applications
 
-.PHONY: all build dev run clean lint-qml install install-bin install-completions install-systemd install-icon install-desktop uninstall uninstall-bin uninstall-shell uninstall-completions uninstall-systemd uninstall-icon uninstall-desktop help
+.PHONY: all build dev dev-mobile run clean lint-qml install install-bin install-completions install-systemd install-icon install-desktop uninstall uninstall-bin uninstall-shell uninstall-completions uninstall-systemd uninstall-icon uninstall-desktop help
 
 all: build
 
@@ -30,6 +30,10 @@ build:
 
 dev:
 	@$(MAKE) -C $(CORE_DIR) dev
+
+# Run the mobile shell in a nested niri (winit backend) at 360x720 logical px
+dev-mobile:
+	@./scripts/dev-mobile.sh
 
 run: dev
 	@$(BUILD_DIR)/$(BINARY_NAME) run -c $(CURDIR)/$(SHELL_DIR)
@@ -154,6 +158,7 @@ help:
 	@echo "  clean                - Clean build artifacts"
 	@echo "  lint-qml             - Run qmllint on shell entrypoints using the Quickshell tooling VFS"
 	@echo "  test-qml             - Run shell logic, Qt unit tests and QML widget regressions"
+	@echo "  dev-mobile           - Run the mobile shell in a nested niri window"
 	@echo ""
 	@echo "Install:"
 	@echo "  install              - Build and install everything (requires sudo)"
