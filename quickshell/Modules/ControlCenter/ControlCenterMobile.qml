@@ -17,9 +17,11 @@ PanelWindow {
     WlrLayershell.namespace: "dms:control-center-mobile"
     WlrLayershell.layer: WlrLayershell.Overlay
     WlrLayershell.exclusiveZone: -1
-    // A modal on top of us (the power menu) needs the keys, and it cannot get
-    // them while we hold an exclusive grab.
-    WlrLayershell.keyboardFocus: _open && !powerMenuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // On demand rather than exclusive: the panel is touch-driven and has no key
+    // handling of its own, but the VPN profile fields inside it still need keys
+    // once tapped. An exclusive grab would also starve modals stacked on top,
+    // such as the power menu.
+    WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     screen: Quickshell.screens[0]
     color: "transparent"
@@ -39,8 +41,6 @@ PanelWindow {
     property string expandedSection: ""
     property int expandedWidgetIndex: -1
     property var expandedWidgetData: null
-
-    readonly property bool powerMenuOpen: PopoutService.powerMenuModal?.shouldBeVisible ?? false
 
     /// Set by DMSShell, which owns the modal. Without it the colour-picker
     /// widgets in the grid have nothing to open.
@@ -79,14 +79,6 @@ PanelWindow {
     onEditModeChanged: {
         if (editMode)
             collapseAll()
-    }
-
-    Keys.onEscapePressed: {
-        if (expandedSection !== "") {
-            collapseAll()
-        } else if (_open) {
-            _open = false
-        }
     }
 
     WidgetModel {
