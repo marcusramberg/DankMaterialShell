@@ -157,7 +157,12 @@ PanelWindow {
                         root._open = false
                         IdleService.lockRequested()
                     }
-                    onPowerButtonClicked: root.powerMenuRequested()
+                    onPowerButtonClicked: {
+                        // Full screen panel, so it would cover the power menu
+                        // rather than sit behind it like the desktop popout.
+                        root._open = false
+                        root.powerMenuRequested()
+                    }
                     onSettingsButtonClicked: root._open = false
                 }
 
