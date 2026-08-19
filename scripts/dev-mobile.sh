@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-# Run the mobile shell inside a nested niri (winit backend), so mobile layout
-# work does not need a phone or a spare TTY.
+# Run the mobile shell in a nested niri (winit backend).
 #
 # Usage: scripts/dev-mobile.sh [-s WIDTHxHEIGHT] [-- extra qs args]
 #
-# Mod+Shift+E quits the nested compositor. Mod+Return opens a terminal inside
-# it, which is handy for checking window rules and the top bar.
+# Mod+Shift+E quits it, Mod+Return opens a terminal inside it.
 
 set -euo pipefail
 
@@ -24,7 +22,7 @@ while [ $# -gt 0 ]; do
             break
             ;;
         -h | --help)
-            sed -n '2,9p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+            sed -n '2,6p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
             exit 0
             ;;
         *)
@@ -51,20 +49,16 @@ if [ ! -e "$REPO_ROOT/quickshell/DankCommon/Widgets/DankIcon.qml" ]; then
     exit 1
 fi
 
-# The nested compositor is not the session compositor, so --session must stay
-# off: it would export this instance's WAYLAND_DISPLAY to systemd and D-Bus and
-# hijack the outer session.
+# No --session: it would hijack the outer session's systemd and D-Bus env.
 if [ -n "$SIZE" ]; then
-    # niri only reads the output mode from the config file, so a size override
-    # goes through a temporary copy of it.
+    # niri reads the mode from the config file only.
     TMP_CONFIG="$(mktemp -t dms-mobile-niri-XXXXXX.kdl)"
     trap 'rm -f "$TMP_CONFIG"' EXIT
     sed "s/^    mode \".*\"$/    mode \"$SIZE\"/" "$NIRI_CONFIG" >"$TMP_CONFIG"
     NIRI_CONFIG="$TMP_CONFIG"
 fi
 
-# Niri does not forward a startup command's output to its own stdout, so the
-# shell logs go to a file the script names up front.
+# niri does not forward a startup command's output.
 LOG_FILE="${TMPDIR:-/tmp}/dms-mobile.log"
 echo "shell log: $LOG_FILE"
 

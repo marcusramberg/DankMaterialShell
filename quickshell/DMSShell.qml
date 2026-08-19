@@ -1292,8 +1292,7 @@ Item {
         }
     }
 
-    // The home bar and launcher are disabled: we target springchick, which
-    // ships its own.
+    // Disabled: springchick ships its own.
     // Loader {
     //     id: mobileHomeBarLoader
     //     active: MobileMode.active && root.mobileSurfacesLoaded
@@ -1330,8 +1329,6 @@ Item {
     Connections {
         target: controlCenterMobileLoader.item
 
-        // The power menu modal is lazy and lives here, so the mobile control
-        // center asks for it rather than reaching for the loader itself.
         function onPowerMenuRequested() {
             powerMenuModalLoader.active = true;
             if (powerMenuModalLoader.item)

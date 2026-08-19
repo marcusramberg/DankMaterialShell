@@ -13,8 +13,7 @@ PanelWindow {
     WlrLayershell.namespace: "dms:notification-center-mobile"
     WlrLayershell.layer: WlrLayershell.Overlay
     WlrLayershell.exclusiveZone: -1
-    // Touch-driven and has no key handling, so an exclusive grab would only trap
-    // keystrokes with no way to dismiss.
+    // Not exclusive: no key handling here, so a grab only traps keystrokes.
     WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     screen: Quickshell.screens[0]
