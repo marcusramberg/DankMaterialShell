@@ -17,10 +17,7 @@ PanelWindow {
     WlrLayershell.namespace: "dms:control-center-mobile"
     WlrLayershell.layer: WlrLayershell.Overlay
     WlrLayershell.exclusiveZone: -1
-    // On demand rather than exclusive: the panel is touch-driven and has no key
-    // handling of its own, but the VPN profile fields inside it still need keys
-    // once tapped. An exclusive grab would also starve modals stacked on top,
-    // such as the power menu.
+    // Not exclusive: that starves stacked modals, and the VPN fields still need keys.
     WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     screen: Quickshell.screens[0]
@@ -158,8 +155,7 @@ PanelWindow {
                         IdleService.lockRequested()
                     }
                     onPowerButtonClicked: {
-                        // Full screen panel, so it would cover the power menu
-                        // rather than sit behind it like the desktop popout.
+                        // Full screen, so it would cover the power menu.
                         root._open = false
                         root.powerMenuRequested()
                     }

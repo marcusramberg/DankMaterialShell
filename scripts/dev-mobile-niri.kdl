@@ -1,17 +1,13 @@
-// Niri config for the nested mobile dev session (see scripts/dev-mobile.sh).
-// Kept minimal on purpose: this compositor exists to host DMS in a phone-sized
-// window, not to be a usable desktop. The shell itself is passed to niri as a
-// startup command by the script, so this file stays path-independent.
+// Nested mobile dev session, see scripts/dev-mobile.sh. The script passes the
+// shell in as a startup command, so this stays path-independent.
 
 environment {
     DMS_MOBILE "1"
-    // The nested shell must not drive the outer session's dms daemon.
+    // Must not drive the outer session's dms daemon.
     DMS_SOCKET null
 }
 
-// The winit backend exposes a single output named "winit". A 720x1440 mode at
-// scale 2 gives 360x720 logical pixels, the narrowest layout the mobile work
-// targets.
+// 720x1440 at scale 2 is 360x720 logical, the narrowest layout targeted.
 output "winit" {
     mode "720x1440"
     scale 2
