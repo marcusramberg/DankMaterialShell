@@ -41,12 +41,17 @@ Item {
         return JSON.stringify(mapped);
     }
 
+    // DMSShell owns the mobile surfaces, so it rebuilds them on this signal
+    signal mobileSurfacesRecreateRequested
+
     function recreateBarSurfaces() {
         log.info("Recreating bar surfaces, screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","));
         dankBarRepeater.horizontalReady = 0;
         if (barSurfacesLoaded)
             barSurfacesLoaded = false;
         barSurfaceReloadAction.schedule();
+        if (MobileMode.active)
+            mobileSurfacesRecreateRequested();
     }
 
     // Holds the bar rebuild until the compositor applies the layout, so the swap lands in one pass
@@ -91,7 +96,7 @@ Item {
     }
 
     Loader {
-        active: root.frameSurfacesLoaded
+        active: root.frameSurfacesLoaded && !MobileMode.active
         asynchronous: false
         sourceComponent: Frame {}
     }
@@ -138,7 +143,7 @@ Item {
             required property var modelData
             property var barConfig: SettingsData.barConfigs.find(cfg => cfg.id === modelData.id) || null
             readonly property bool isVertical: modelData.position === SettingsData.Position.Left || modelData.position === SettingsData.Position.Right
-            active: root.barSurfacesLoaded && (barConfig?.enabled ?? false) && (!isVertical || dankBarRepeater.horizontalReady >= dankBarRepeater.horizontalWanted)
+            active: root.barSurfacesLoaded && (barConfig?.enabled ?? false) && !MobileMode.active && (!isVertical || dankBarRepeater.horizontalReady >= dankBarRepeater.horizontalWanted)
             asynchronous: false
             onItemChanged: dankBarRepeater.recountHorizontalReady()
 
@@ -346,7 +351,7 @@ Item {
 
     LazyLoader {
         id: hyprlandOverviewLoader
-        active: CompositorService.isHyprland
+        active: CompositorService.isHyprland && !MobileMode.active
         component: HyprlandOverview {
             id: hyprlandOverview
         }
