@@ -41,7 +41,7 @@ Item {
         return JSON.stringify(mapped);
     }
 
-    // DMSShell owns the mobile surfaces, so it rebuilds them on this signal
+    // DMSShell owns the mobile surfaces
     signal mobileSurfacesRecreateRequested
 
     function recreateBarSurfaces() {
