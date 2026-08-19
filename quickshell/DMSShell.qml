@@ -56,7 +56,11 @@ Item {
         osdSurfaceReloadTimer.restart();
     }
 
-    DesktopWidgetLayer {}
+    Loader {
+        active: !MobileMode.active
+        asynchronous: false
+        sourceComponent: DesktopWidgetLayer {}
+    }
 
     Lock {
         id: lock
@@ -171,6 +175,10 @@ Item {
             dockRecreateDebounce.restart();
         }
 
+        function onMobileSurfacesRecreateRequested() {
+            root.recreateMobileSurfaces();
+        }
+
         function onSurfaceRecoveryPass() {
             root.dockEnabled = false;
             Qt.callLater(() => {
@@ -255,7 +263,7 @@ Item {
 
     Loader {
         id: dockLoader
-        active: root.dockEnabled
+        active: root.dockEnabled && !MobileMode.active
         asynchronous: false
 
         property var currentPosition: SettingsData.dockPosition
@@ -1252,9 +1260,82 @@ Item {
 
     LazyLoader {
         id: niriOverviewOverlayLoader
-        active: CompositorService.isNiri && SettingsData.niriOverviewOverlayEnabled
+        active: CompositorService.isNiri && SettingsData.niriOverviewOverlayEnabled && !MobileMode.active
         component: NiriOverviewOverlay {
             id: niriOverviewOverlay
+        }
+    }
+
+    property bool mobileSurfacesLoaded: true
+
+    function recreateMobileSurfaces() {
+        if (mobileSurfacesLoaded) {
+            log.info("Recreating mobile surfaces, screens:", Quickshell.screens.length, Quickshell.screens.map(s => s.name).join(","));
+            mobileSurfacesLoaded = false;
+            mobileSurfaceReloadAction.schedule();
+        }
+    }
+
+    DeferredAction {
+        id: mobileSurfaceReloadAction
+        onTriggered: root.mobileSurfacesLoaded = true
+    }
+
+    Loader {
+        id: mobileTopBarLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/Mobile/MobileTopBar.qml"
+
+        onLoaded: {
+            item.swipeLeftDown.connect(() => notifCenterMobileLoader.item?.toggle());
+            item.swipeRightDown.connect(() => controlCenterMobileLoader.item?.toggle());
+        }
+    }
+
+    // The home bar and launcher are disabled: we target springchick, which
+    // ships its own.
+    // Loader {
+    //     id: mobileHomeBarLoader
+    //     active: MobileMode.active && root.mobileSurfacesLoaded
+    //     source: "Modules/Mobile/MobileHomeBar.qml"
+    // }
+
+    // Connections {
+    //     target: mobileHomeBarLoader.item
+    //     function onOpenLauncher() {
+    //         mobileLauncherLoader.item?.toggle();
+    //     }
+    // }
+
+    // Loader {
+    //     id: mobileLauncherLoader
+    //     active: MobileMode.active && root.mobileSurfacesLoaded
+    //     source: "Modules/Mobile/MobileLauncher.qml"
+    // }
+
+    Loader {
+        id: notifCenterMobileLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/Notifications/Center/NotificationCenterMobile.qml"
+    }
+
+    Loader {
+        id: controlCenterMobileLoader
+        active: MobileMode.active && root.mobileSurfacesLoaded
+        source: "Modules/ControlCenter/ControlCenterMobile.qml"
+
+        onLoaded: item.colorPickerModal = colorPickerModal
+    }
+
+    Connections {
+        target: controlCenterMobileLoader.item
+
+        // The power menu modal is lazy and lives here, so the mobile control
+        // center asks for it rather than reaching for the loader itself.
+        function onPowerMenuRequested() {
+            powerMenuModalLoader.active = true;
+            if (powerMenuModalLoader.item)
+                powerMenuModalLoader.item.openCentered();
         }
     }
 
