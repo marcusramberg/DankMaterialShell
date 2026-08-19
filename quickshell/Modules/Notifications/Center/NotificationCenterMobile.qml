@@ -13,7 +13,9 @@ PanelWindow {
     WlrLayershell.namespace: "dms:notification-center-mobile"
     WlrLayershell.layer: WlrLayershell.Overlay
     WlrLayershell.exclusiveZone: -1
-    WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // Touch-driven and has no key handling, so an exclusive grab would only trap
+    // keystrokes with no way to dismiss.
+    WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     screen: Quickshell.screens[0]
     color: "transparent"
@@ -37,11 +39,6 @@ PanelWindow {
                 _open = true
             })
         }
-    }
-
-    Keys.onEscapePressed: {
-        if (_open)
-            _open = false
     }
 
     Rectangle {
