@@ -135,7 +135,7 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            color: Theme.popupLayerColor(Theme.surfaceContainer)
+            color: Theme.withAlpha(Theme.surfaceContainer, Theme.popupTransparency)
         }
 
         Flickable {
