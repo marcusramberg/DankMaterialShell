@@ -21,6 +21,7 @@ Item {
     property bool isLabwc: CompositorService.isLabwc
     property bool isAqueous: CompositorService.isAqueous
     property bool isUmbriel: CompositorService.isUmbriel
+    property bool isSpringchick: CompositorService.isSpringchick
 
     property string compositorName: {
         if (isHyprland)
@@ -37,6 +38,8 @@ Item {
             return "labwc";
         if (isAqueous)
             return "aqueous";
+        if (isSpringchick)
+            return "springchick";
         return "niri";
     }
 
@@ -57,6 +60,8 @@ Item {
             return "/assets/aqueous.svg";
         if (isUmbriel)
             return "/assets/umbriel.svg";
+        if (isSpringchick)
+            return "/assets/springchick.svg";
         return "/assets/niri.svg";
     }
 
@@ -77,6 +82,8 @@ Item {
             return "";
         if (isUmbriel)
             return "https://github.com/noctalia-dev/umbriel";
+        if (isSpringchick)
+            return "https://github.com/marcusramberg/springchick";
         return "https://github.com/niri-wm/niri";
     }
 
@@ -97,6 +104,8 @@ Item {
             return "Aqueous";
         if (isUmbriel)
             return "Umbriel";
+        if (isSpringchick)
+            return I18n.tr("springchick GitHub");
         return I18n.tr("niri GitHub");
     }
 
@@ -125,9 +134,9 @@ Item {
     property string ircUrl: "https://web.libera.chat/gamja/?channels=#labwc"
     property string ircTooltip: I18n.tr("LabWC IRC channel")
 
-    property bool showMatrix: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc
+    property bool showMatrix: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc && !isSpringchick
     property bool showCompositorDiscord: isHyprland || isMango
-    property bool showReddit: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc
+    property bool showReddit: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc && !isSpringchick
     property bool showIrc: isLabwc
 
     SettingsPage {
