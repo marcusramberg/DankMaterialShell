@@ -415,6 +415,11 @@ Singleton {
                 return;
             }
 
+            if (CompositorService.isSpringchick) {
+                SpringchickService.quit();
+                return;
+            }
+
             if (CompositorService.isSway || CompositorService.isScroll || CompositorService.isMiracle) {
                 try {
                     I3.dispatch("exit");

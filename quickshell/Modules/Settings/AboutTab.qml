@@ -18,6 +18,7 @@ Item {
     property bool isMiracle: CompositorService.isMiracle
     property bool isMango: CompositorService.isMango
     property bool isLabwc: CompositorService.isLabwc
+    property bool isSpringchick: CompositorService.isSpringchick
 
     property string compositorName: {
         if (isHyprland)
@@ -32,6 +33,8 @@ Item {
             return "mangowc";
         if (isLabwc)
             return "labwc";
+        if (isSpringchick)
+            return "springchick";
         return "niri";
     }
 
@@ -48,6 +51,8 @@ Item {
             return "/assets/mango.png";
         if (isLabwc)
             return "/assets/labwc.png";
+        if (isSpringchick)
+            return "/assets/springchick.svg";
         return "/assets/niri.svg";
     }
 
@@ -64,6 +69,8 @@ Item {
             return "https://github.com/DreamMaoMao/mangowc";
         if (isLabwc)
             return "https://labwc.github.io/";
+        if (isSpringchick)
+            return "https://github.com/marcusramberg/springchick";
         return "https://github.com/niri-wm/niri";
     }
 
@@ -80,6 +87,8 @@ Item {
             return I18n.tr("mangowc GitHub");
         if (isLabwc)
             return I18n.tr("LabWC Website");
+        if (isSpringchick)
+            return I18n.tr("springchick GitHub");
         return I18n.tr("niri GitHub");
     }
 
@@ -108,9 +117,9 @@ Item {
     property string ircUrl: "https://web.libera.chat/gamja/?channels=#labwc"
     property string ircTooltip: I18n.tr("LabWC IRC Channel")
 
-    property bool showMatrix: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc
+    property bool showMatrix: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc && !isSpringchick
     property bool showCompositorDiscord: isHyprland || isMango
-    property bool showReddit: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc
+    property bool showReddit: isNiri && !isHyprland && !isSway && !isScroll && !isMiracle && !isMango && !isLabwc && !isSpringchick
     property bool showIrc: isLabwc
 
     DankFlickable {
