@@ -74,6 +74,12 @@ Item {
                 url: "https://github.com/noctalia-dev/umbriel",
                 label: "Umbriel"
             };
+        case CompositorService.isSpringchick:
+            return {
+                logo: "springchick.svg",
+                url: "https://github.com/marcusramberg/springchick",
+                label: I18n.tr("springchick GitHub")
+            };
         case CompositorService.isNiri:
             return {
                 logo: "niri.svg",

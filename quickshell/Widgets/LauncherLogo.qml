@@ -32,6 +32,7 @@ Item {
         }
     }
     readonly property bool colorize: resolvedColor !== ""
+    readonly property bool compositorAvailable: CompositorService.isNiri || CompositorService.isHyprland || CompositorService.isMango || CompositorService.isSway || CompositorService.isScroll || CompositorService.isMiracle || CompositorService.isLabwc || CompositorService.isSpringchick
     readonly property string resolvedMode: {
         const fallback = fallbackToApps ? "apps" : "";
         switch (mode) {
@@ -67,6 +68,8 @@ Item {
             return "file://" + Theme.shellDir + "/assets/aqueous.svg";
         case "umbriel":
             return "file://" + Theme.shellDir + "/assets/umbriel.svg";
+        case "springchick":
+            return "file://" + Theme.shellDir + "/assets/springchick.svg";
         default:
             return "";
         }

@@ -461,6 +461,11 @@ printf 'uwsm=%s\nelogind=%s\nloginctl=%s\nsystemctl=%s\nusermgr=%s\nhibernate=%s
                 return;
             }
 
+            if (CompositorService.isSpringchick) {
+                SpringchickService.quit();
+                return;
+            }
+
             if (CompositorService.isSway || CompositorService.isScroll || CompositorService.isMiracle) {
                 try {
                     I3.dispatch("exit");
