@@ -25,6 +25,7 @@ Singleton {
     property bool isLabwc: false
     property bool isAqueous: false
     property bool isUmbriel: false
+    property bool isSpringchick: false
     property string compositor: "unknown"
     property bool compositorDetected: false
     property bool outputPowerAvailable: false
@@ -73,6 +74,7 @@ Singleton {
     readonly property string swaySocket: Quickshell.env("SWAYSOCK")
     readonly property string miracleSocket: Quickshell.env("MIRACLESOCK")
     readonly property string labwcPid: Quickshell.env("LABWC_PID")
+    readonly property string springchickSocket: Quickshell.env("SPRINGCHICK_IPC_SOCK") || ((Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/springchick-ipc.sock")
     readonly property string mangoSignature: Quickshell.env("MANGO_INSTANCE_SIGNATURE")
     property bool useNiriSorting: isNiri && NiriService
     property bool useMangoSorting: isMango && MangoService
@@ -1387,6 +1389,8 @@ Singleton {
             return "aqueous";
         case "umbriel":
             return "umbriel";
+        case "springchick":
+            return "springchick";
         default:
             return "";
         }
@@ -1402,6 +1406,7 @@ Singleton {
         isLabwc = name === "labwc";
         isAqueous = name === "aqueous";
         isUmbriel = name === "umbriel";
+        isSpringchick = name === "springchick";
         compositor = name;
         compositorDetected = true;
         if (isNiri)
@@ -1523,6 +1528,14 @@ Singleton {
                 detail: "LABWC_PID " + labwcPid
             },
             {
+                // springchick exports no signature of its own; the session's
+                // XDG_CURRENT_DESKTOP plus a live control socket is the tell.
+                name: "springchick",
+                present: String(Quickshell.env("XDG_CURRENT_DESKTOP") || "").toLowerCase().split(":").includes("springchick"),
+                test: ["test", "-S", springchickSocket],
+                detail: "springchick socket " + springchickSocket
+            },
+            {
                 name: "hyprland",
                 present: !!hyprlandSignature,
                 test: ["test", "-S", runtimeDir + "/hypr/" + hyprlandSignature + "/.socket.sock"],
@@ -1567,7 +1580,7 @@ Singleton {
             } catch (_) {}
             return;
         }
-        if (isLabwc) {
+        if (isLabwc || isSpringchick) {
             Quickshell.execDetached(["dms", "dpms", "off"]);
             return;
         }
@@ -1593,7 +1606,7 @@ Singleton {
             } catch (_) {}
             return;
         }
-        if (isLabwc) {
+        if (isLabwc || isSpringchick) {
             Quickshell.execDetached(["dms", "dpms", "on"]);
             return;
         }
