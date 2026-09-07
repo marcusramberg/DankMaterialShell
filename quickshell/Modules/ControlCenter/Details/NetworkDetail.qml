@@ -45,7 +45,7 @@ Rectangle {
 
     property bool hasEthernetAvailable: (NetworkService.ethernetDevices?.length ?? 0) > 0
     property bool hasWifiAvailable: (NetworkService.wifiDevices?.length ?? 0) > 0
-    property bool hasCellularAvailable: (NetworkService.cellularDevices?.length ?? 0) > 0
+    property bool hasCellularAvailable: NetworkService.cellularAvailable
     property var connectionTypes: {
         const types = [];
         if (hasEthernetAvailable)

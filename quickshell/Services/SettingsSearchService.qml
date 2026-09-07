@@ -56,7 +56,7 @@ Singleton {
             "greeterAvailable": () => GreeterService.available,
             "frameEnabled": () => SettingsData.frameEnabled,
             "islandEnabled": () => SettingsData.islandBarConfigs.length > 0,
-            "cellularAvailable": () => (NetworkService.cellularDevices?.length ?? 0) > 0
+            "cellularAvailable": () => NetworkService.cellularAvailable
         })
 
     Component.onCompleted: indexFile.reload()
