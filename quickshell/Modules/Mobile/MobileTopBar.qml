@@ -186,6 +186,14 @@ PanelWindow {
                 spacing: 6
 
                 DankIcon {
+                    name: NetworkService.cellularConnected ? "network_cell" : "signal_cellular_off"
+                    size: Theme.iconSizeSmall
+                    color: NetworkService.cellularConnected ? Theme.surfaceText : Theme.surfaceTextMedium
+                    visible: (NetworkService.cellularDevices?.length ?? 0) > 0 && NetworkService.cellularEnabled
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                DankIcon {
                     name: NetworkService.wifiConnected ? "wifi" : "wifi_off"
                     size: Theme.iconSizeSmall
                     color: Theme.surfaceText
