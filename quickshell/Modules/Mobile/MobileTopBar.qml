@@ -186,7 +186,7 @@ PanelWindow {
                 spacing: 6
 
                 DankIcon {
-                    name: NetworkService.cellularConnected ? "network_cell" : "signal_cellular_off"
+                    name: NetworkService.cellularSignalIcon
                     size: Theme.iconSizeSmall
                     color: NetworkService.cellularConnected ? Theme.surfaceText : Theme.surfaceTextMedium
                     visible: (NetworkService.cellularDevices?.length ?? 0) > 0 && NetworkService.cellularEnabled
