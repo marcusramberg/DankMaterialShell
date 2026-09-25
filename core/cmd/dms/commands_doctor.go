@@ -86,18 +86,19 @@ func (ds *DoctorStatus) OKCount() int {
 }
 
 var (
-	quickshellVersionRegex = regexp.MustCompile(`(?i)quickshell (\d+\.\d+\.\d+)`)
-	hyprlandVersionRegex   = regexp.MustCompile(`v?(\d+\.\d+\.\d+)`)
-	niriVersionRegex       = regexp.MustCompile(`niri (\d+\.\d+)`)
-	swayVersionRegex       = regexp.MustCompile(`sway version (\d+\.\d+)`)
-	riverVersionRegex      = regexp.MustCompile(`river (\d+\.\d+)`)
-	wayfireVersionRegex    = regexp.MustCompile(`wayfire (\d+\.\d+)`)
-	labwcVersionRegex      = regexp.MustCompile(`labwc (\d+\.\d+\.\d+)`)
-	mangowcVersionRegex    = regexp.MustCompile(`mango (\d+\.\d+\.\d+)`)
-	miracleVersionRegex    = regexp.MustCompile(`miracle-wm v?(\d+\.\d+\.\d+)`)
-	scrollVersionRegex     = regexp.MustCompile(`scroll version (\d+\.\d+)`)
-	aqueousVersionRegex    = regexp.MustCompile(`(?i)aqueous v?(\d+\.\d+(?:\.\d+)?)`)
-	umbrielVersionRegex    = regexp.MustCompile(`umbriel (\d+\.\d+\.\d+)`)
+	quickshellVersionRegex  = regexp.MustCompile(`(?i)quickshell (\d+\.\d+\.\d+)`)
+	hyprlandVersionRegex    = regexp.MustCompile(`v?(\d+\.\d+\.\d+)`)
+	niriVersionRegex        = regexp.MustCompile(`niri (\d+\.\d+)`)
+	swayVersionRegex        = regexp.MustCompile(`sway version (\d+\.\d+)`)
+	riverVersionRegex       = regexp.MustCompile(`river (\d+\.\d+)`)
+	wayfireVersionRegex     = regexp.MustCompile(`wayfire (\d+\.\d+)`)
+	labwcVersionRegex       = regexp.MustCompile(`labwc (\d+\.\d+\.\d+)`)
+	mangowcVersionRegex     = regexp.MustCompile(`mango (\d+\.\d+\.\d+)`)
+	miracleVersionRegex     = regexp.MustCompile(`miracle-wm v?(\d+\.\d+\.\d+)`)
+	scrollVersionRegex      = regexp.MustCompile(`scroll version (\d+\.\d+)`)
+	aqueousVersionRegex     = regexp.MustCompile(`(?i)aqueous v?(\d+\.\d+(?:\.\d+)?)`)
+	umbrielVersionRegex     = regexp.MustCompile(`umbriel (\d+\.\d+\.\d+)`)
+	springchickVersionRegex = regexp.MustCompile(`springchick (\d+\.\d+\.\d+)`)
 )
 
 var doctorCmd = &cobra.Command{
@@ -745,6 +746,7 @@ func checkWindowManagers() []checkResult {
 		{"Scroll", "scroll", "--version", scrollVersionRegex, []string{"scroll"}},
 		{"Aqueous", "aqueous", "-version", aqueousVersionRegex, []string{"aqueous"}},
 		{"Umbriel", "umbriel", "--version", umbrielVersionRegex, []string{"umbriel"}},
+		{"springchick", "springchick", "--version", springchickVersionRegex, []string{"springchick"}},
 	}
 
 	var results []checkResult
@@ -777,7 +779,7 @@ func checkWindowManagers() []checkResult {
 		results = append(results, checkResult{
 			catCompositor, "Compositor", statusError,
 			"No supported Wayland compositor found",
-			"Install Hyprland, niri, Sway, River, Wayfire, labwc, mangowc, miracle-wm, Scroll, Aqueous, or Umbriel",
+			"Install Hyprland, niri, Sway, River, Wayfire, labwc, mangowc, miracle-wm, Scroll, Aqueous, Umbriel, or springchick",
 			doctorDocsURL + "#compositor-checks",
 		})
 	}
