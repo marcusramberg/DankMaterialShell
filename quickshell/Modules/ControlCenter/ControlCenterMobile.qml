@@ -6,10 +6,6 @@ import Quickshell.Wayland
 import qs.Common
 import qs.Services
 import qs.Widgets
-import qs.Modules.ControlCenter.Components
-import qs.Modules.ControlCenter.Details
-import qs.Modules.ControlCenter.Models
-import "./utils/state.js" as StateUtils
 
 PanelWindow {
     id: root
@@ -31,21 +27,37 @@ PanelWindow {
     property bool _open: false
     property bool _mappedVisible: false
     property bool editMode: false
-
-    /// Which widget's detail pane (bluetooth device list, wifi networks, audio
-    /// outputs, …) is expanded, and the widget it belongs to. DragDropGrid
-    /// renders the pane itself; it just needs the state held for it.
     property string expandedSection: ""
-    property int expandedWidgetIndex: -1
-    property var expandedWidgetData: null
 
-    /// Set by DMSShell, which owns the modal. Without it the colour-picker
-    /// widgets in the grid have nothing to open.
+    /// Set by DMSShell, which owns the modals.
     property var colorPickerModal: null
+    property var powerMenuModalLoader: null
 
-    signal powerMenuRequested
+    signal lockRequested
 
     visible: _mappedVisible
+
+    // The host interface ControlCenterContent expects from DankPopout. The
+    // sheet is the whole screen here, so every alignment is the origin.
+    readonly property var triggerScreen: root.screen
+    readonly property bool shouldBeVisible: _open
+    readonly property bool headerTogglesClose: false
+    readonly property real sheetContentWidth: width
+    readonly property real availableHeight: height - dragArea.height
+    readonly property vector4d surfaceCornerRadii: Qt.vector4d(0, 0, 0, 0)
+    readonly property real alignedX: 0
+    readonly property real alignedY: 0
+    readonly property real renderedAlignedX: 0
+    readonly property real renderedAlignedY: 0
+    readonly property real alignedWidth: width
+    readonly property real alignedHeight: height
+    readonly property real popupWidth: width
+    readonly property real popupHeight: height
+    readonly property bool powerMenuOpen: powerMenuModalLoader?.item?.shouldBeVisible ?? false
+
+    function alignedXFor(w) {
+        return 0
+    }
 
     function toggle() {
         if (_open) {
@@ -58,28 +70,40 @@ PanelWindow {
         }
     }
 
-    function collapseAll() {
-        expandedSection = ""
-        expandedWidgetIndex = -1
-        expandedWidgetData = null
+    function close() {
+        _open = false
     }
 
-    function toggleSection(section) {
-        StateUtils.toggleSection(root, section)
+    function collapseAll() {
+        expandedSection = ""
+    }
+
+    function openSettings() {
+        _open = false
+        PopoutService.focusOrToggleSettings()
+    }
+
+    function openColorPicker() {
+        _open = false
+        colorPickerModal?.show()
     }
 
     on_OpenChanged: {
-        if (!_open)
+        if (!_open) {
             collapseAll()
+            editMode = false
+        }
     }
 
-    onEditModeChanged: {
-        if (editMode)
-            collapseAll()
+    // Full screen, so it would cover the power menu.
+    onPowerMenuOpenChanged: {
+        if (powerMenuOpen)
+            _open = false
     }
 
-    WidgetModel {
-        id: widgetModel
+    onLockRequested: {
+        _open = false
+        IdleService.lockRequested()
     }
 
     Rectangle {
@@ -127,104 +151,10 @@ PanelWindow {
             color: Theme.withAlpha(Theme.surfaceContainer, Theme.popupTransparency)
         }
 
-        Flickable {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.topMargin: 48
-            height: parent.height - 48
-            contentWidth: width
-            contentHeight: Math.max(height, mainColumn.implicitHeight + Theme.spacingM)
-            clip: true
-            interactive: contentHeight > height
-
-            Column {
-                id: mainColumn
-                width: parent.width - Theme.spacingL * 2
-                x: Theme.spacingL
-                y: Theme.spacingL
-                spacing: Theme.spacingS
-
-                HeaderPane {
-                    id: headerPane
-                    width: parent.width
-                    editMode: root.editMode
-                    onEditModeToggled: root.editMode = !root.editMode
-                    onLockRequested: {
-                        root._open = false
-                        IdleService.lockRequested()
-                    }
-                    onPowerButtonClicked: {
-                        // Full screen, so it would cover the power menu.
-                        root._open = false
-                        root.powerMenuRequested()
-                    }
-                    onSettingsButtonClicked: root._open = false
-                }
-
-                DragDropGrid {
-                    id: widgetGrid
-                    width: parent.width
-                    editMode: root.editMode
-                    maxPopoutHeight: root.height - 100
-                    expandedSection: root.expandedSection
-                    expandedWidgetIndex: root.expandedWidgetIndex
-                    expandedWidgetData: root.expandedWidgetData
-                    model: widgetModel
-                    bluetoothCodecSelector: bluetoothCodecSelector
-                    colorPickerModal: root.colorPickerModal
-                    screenName: root.screen?.name || ""
-                    screenModel: root.screen?.model || ""
-                    parentScreen: root.screen
-                    onExpandClicked: (widgetData, globalIndex) => {
-                        root.expandedWidgetIndex = globalIndex
-                        root.expandedWidgetData = widgetData
-                        if (widgetData.id === "diskUsage") {
-                            root.toggleSection("diskUsage_" + (widgetData.instanceId || "default"))
-                        } else if (widgetData.id === "brightnessSlider") {
-                            root.toggleSection("brightnessSlider_" + (widgetData.instanceId || "default"))
-                        } else {
-                            root.toggleSection(widgetData.id)
-                        }
-                    }
-                    onRemoveWidget: index => widgetModel.removeWidget(index)
-                    onMoveWidget: (fromIndex, toIndex) => widgetModel.moveWidget(fromIndex, toIndex)
-                    onToggleWidgetSize: index => widgetModel.toggleWidgetSize(index)
-                    onCollapseRequested: root.collapseAll()
-                    onConfigRequested: (idx, data, anchor) => widgetConfigOverlay.open(idx, data, anchor)
-                }
-
-                EditControls {
-                    width: parent.width
-                    visible: root.editMode
-                    popupScreen: root.screen
-                    popoutX: 0
-                    popoutY: 0
-                    popoutWidth: root.width
-                    popoutHeight: root.height
-                    availableWidgets: {
-                        if (!root.editMode)
-                            return []
-                        const existingIds = (SettingsData.controlCenterWidgets || []).map(w => w.id)
-                        const allWidgets = widgetModel.baseWidgetDefinitions.concat(widgetModel.getPluginWidgets())
-                        return allWidgets.filter(w => w.allowMultiple || !existingIds.includes(w.id))
-                    }
-                    onAddWidget: widgetId => widgetModel.addWidget(widgetId)
-                    onResetToDefault: () => widgetModel.resetToDefault()
-                    onClearAll: () => widgetModel.clearAll()
-                }
-            }
-        }
-
-        BluetoothCodecSelector {
-            id: bluetoothCodecSelector
+        ControlCenterContent {
+            host: root
             anchors.fill: parent
-            z: 10000
-        }
-
-        WidgetConfigOverlay {
-            id: widgetConfigOverlay
-            anchors.fill: parent
+            anchors.topMargin: dragArea.height
         }
 
         MouseArea {
