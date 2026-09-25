@@ -1373,16 +1373,9 @@ Item {
         active: MobileMode.active && root.mobileSurfacesLoaded
         source: "Modules/ControlCenter/ControlCenterMobile.qml"
 
-        onLoaded: item.colorPickerModal = colorPickerModal
-    }
-
-    Connections {
-        target: controlCenterMobileLoader.item
-
-        function onPowerMenuRequested() {
-            powerMenuModalLoader.active = true;
-            if (powerMenuModalLoader.item)
-                powerMenuModalLoader.item.openCentered();
+        onLoaded: {
+            item.colorPickerModal = colorPickerModal;
+            item.powerMenuModalLoader = powerMenuModalLoader;
         }
     }
 
