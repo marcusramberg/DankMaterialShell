@@ -1,6 +1,7 @@
 package geolocation
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -29,6 +30,9 @@ const (
 	dbusGeoClueLocationInterface = dbusGeoClueInterface + ".Location"
 	dbusGeoClueLocationLatitude  = dbusGeoClueLocationInterface + ".Latitude"
 	dbusGeoClueLocationLongitude = dbusGeoClueLocationInterface + ".Longitude"
+
+	dbusNameOwnerChangedMember     = "NameOwnerChanged"
+	dbusNameOwnerChangedSignalName = "org.freedesktop.DBus." + dbusNameOwnerChangedMember
 )
 
 type GeoClueClient struct {
@@ -36,12 +40,17 @@ type GeoClueClient struct {
 	locationMutex sync.RWMutex
 	seedOnce      sync.Once
 
-	dbusConn   *dbus.Conn
-	clientPath dbus.ObjectPath
-	signals    chan *dbus.Signal
+	dbusConn *dbus.Conn
+	agent    *geoClueAgent
+	signals  chan *dbus.Signal
 
-	stopChan chan struct{}
-	sigWG    sync.WaitGroup
+	startOnce  sync.Once
+	clientMu   sync.Mutex
+	clientPath dbus.ObjectPath
+
+	ctx    context.Context
+	cancel context.CancelFunc
+	sigWG  sync.WaitGroup
 
 	subscribers syncmap.Map[string, chan Location]
 }
@@ -52,9 +61,12 @@ func newGeoClueClient() (*GeoClueClient, error) {
 		return nil, fmt.Errorf("system bus connection failed: %w", err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &GeoClueClient{
+		ctx:    ctx,
+		cancel: cancel,
+
 		dbusConn: dbusConn,
-		stopChan: make(chan struct{}),
 		signals:  make(chan *dbus.Signal, 256),
 
 		currLocation: &Location{
@@ -63,26 +75,44 @@ func newGeoClueClient() (*GeoClueClient, error) {
 		},
 	}
 
-	if err := c.setupClient(); err != nil {
-		return nil, err
+	if agent, err := newGeoClueAgent(ctx, dbusConn); err != nil {
+		log.Warnf("GeoClue: %v", err)
+	} else {
+		c.agent = agent
 	}
 
-	if err := c.startSignalPump(); err != nil {
-		return nil, err
+	c.dbusConn.Signal(c.signals)
+	if err := c.dbusConn.AddMatchSignal(ownerMatch...); err != nil {
+		log.Warnf("GeoClue: cannot watch for restarts: %v", err)
 	}
+
+	if c.agent != nil && c.geoClueRunning() {
+		c.agent.register()
+	}
+
+	c.sigWG.Go(c.signalLoop)
 
 	return c, nil
 }
 
 func (c *GeoClueClient) Close() {
-	close(c.stopChan)
+	c.cancel()
 
 	c.sigWG.Wait()
 
-	if c.signals != nil {
-		c.dbusConn.RemoveSignal(c.signals)
-		close(c.signals)
+	c.clientMu.Lock()
+	if c.clientPath != "" {
+		c.dbusConn.Object(dbusGeoClueService, c.clientPath).Call(dbusGeoClueClientTimeStop, 0)
 	}
+	c.clientMu.Unlock()
+
+	if c.agent != nil {
+		c.agent.unexport()
+	}
+
+	_ = c.dbusConn.RemoveMatchSignal(ownerMatch...)
+	c.dbusConn.RemoveSignal(c.signals)
+	close(c.signals)
 
 	c.subscribers.Range(func(key string, ch chan Location) bool {
 		close(ch)
@@ -92,6 +122,7 @@ func (c *GeoClueClient) Close() {
 }
 
 func (c *GeoClueClient) Subscribe(id string) chan Location {
+	c.ensureStarted()
 	ch := make(chan Location, 64)
 	c.subscribers.Store(id, ch)
 	return ch
@@ -103,15 +134,34 @@ func (c *GeoClueClient) Unsubscribe(id string) {
 	}
 }
 
+func (c *GeoClueClient) geoClueRunning() bool {
+	var running bool
+	err := c.dbusConn.BusObject().Call("org.freedesktop.DBus.NameHasOwner", 0, dbusGeoClueService).Store(&running)
+	return err == nil && running
+}
+
+// The client keeps GeoClue resident, so it only starts once something asks for location.
+func (c *GeoClueClient) ensureStarted() {
+	c.startOnce.Do(func() {
+		c.sigWG.Go(func() {
+			c.clientMu.Lock()
+			defer c.clientMu.Unlock()
+			if err := c.startClient(); err != nil {
+				log.Warnf("GeoClue: %v", err)
+			}
+		})
+	})
+}
+
 func (c *GeoClueClient) setupClient() error {
 	managerObj := c.dbusConn.Object(dbusGeoClueService, dbusGeoClueManagerPath)
 
-	if err := managerObj.Call(dbusGeoClueManagerGetClient, 0).Store(&c.clientPath); err != nil {
+	if err := managerObj.CallWithContext(c.ctx, dbusGeoClueManagerGetClient, 0).Store(&c.clientPath); err != nil {
 		return fmt.Errorf("failed to create GeoClue2 client: %w", err)
 	}
 
 	clientObj := c.dbusConn.Object(dbusGeoClueService, c.clientPath)
-	if err := clientObj.SetProperty(dbusGeoClueClientDesktopId, "dms"); err != nil {
+	if err := clientObj.SetProperty(dbusGeoClueClientDesktopId, dbusGeoClueAgentID); err != nil {
 		return fmt.Errorf("failed to set desktop ID: %w", err)
 	}
 
@@ -122,45 +172,100 @@ func (c *GeoClueClient) setupClient() error {
 	return nil
 }
 
-func (c *GeoClueClient) startSignalPump() error {
-	c.dbusConn.Signal(c.signals)
+var ownerMatch = []dbus.MatchOption{
+	dbus.WithMatchSender("org.freedesktop.DBus"),
+	dbus.WithMatchMember(dbusNameOwnerChangedMember),
+	dbus.WithMatchArg(0, dbusGeoClueService),
+}
 
-	if err := c.dbusConn.AddMatchSignal(
+func (c *GeoClueClient) locationMatch() []dbus.MatchOption {
+	return []dbus.MatchOption{
 		dbus.WithMatchObjectPath(c.clientPath),
 		dbus.WithMatchInterface(dbusGeoClueClientInterface),
 		dbus.WithMatchMember("LocationUpdated"),
-	); err != nil {
+	}
+}
+
+// Caller holds clientMu.
+func (c *GeoClueClient) startClient() error {
+	// GetClient blocks until this user has an agent.
+	if c.agent != nil {
+		c.agent.register()
+	}
+
+	if err := c.setupClient(); err != nil {
+		c.clientPath = ""
 		return err
 	}
 
-	c.sigWG.Go(func() {
+	if err := c.dbusConn.AddMatchSignal(c.locationMatch()...); err != nil {
+		c.clientPath = ""
+		return err
+	}
 
-		clientObj := c.dbusConn.Object(dbusGeoClueService, c.clientPath)
-		clientObj.Call(dbusGeoClueClientTimeStart, 0)
-		defer clientObj.Call(dbusGeoClueClientTimeStop, 0)
-
-		for {
-			select {
-			case <-c.stopChan:
-				return
-			case sig, ok := <-c.signals:
-				if !ok {
-					return
-				}
-				if sig == nil {
-					continue
-				}
-
-				c.handleSignal(sig)
-			}
-		}
-	})
+	if err := c.dbusConn.Object(dbusGeoClueService, c.clientPath).CallWithContext(c.ctx, dbusGeoClueClientTimeStart, 0).Err; err != nil {
+		_ = c.dbusConn.RemoveMatchSignal(c.locationMatch()...)
+		c.clientPath = ""
+		return err
+	}
 
 	return nil
 }
 
+func (c *GeoClueClient) restartClient() {
+	c.clientMu.Lock()
+	defer c.clientMu.Unlock()
+
+	if c.clientPath == "" {
+		return
+	}
+
+	_ = c.dbusConn.RemoveMatchSignal(c.locationMatch()...)
+	c.clientPath = ""
+
+	if err := c.startClient(); err != nil {
+		log.Warnf("GeoClue: failed to recreate client after restart: %v", err)
+		return
+	}
+	log.Info("GeoClue: recreated client after restart")
+}
+
+func (c *GeoClueClient) signalLoop() {
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case sig, ok := <-c.signals:
+			if !ok {
+				return
+			}
+			if sig == nil {
+				continue
+			}
+
+			c.handleSignal(sig)
+		}
+	}
+}
+
 func (c *GeoClueClient) handleSignal(sig *dbus.Signal) {
 	switch sig.Name {
+	case dbusNameOwnerChangedSignalName:
+		if len(sig.Body) != 3 {
+			return
+		}
+		if name, _ := sig.Body[0].(string); name != dbusGeoClueService {
+			return
+		}
+		// Re-registering on vanish would re-activate GeoClue after every idle exit.
+		if newOwner, _ := sig.Body[2].(string); newOwner != "" {
+			if c.agent != nil {
+				c.agent.register()
+			}
+			return
+		}
+		// A started client keeps GeoClue alive, so vanishing means it crashed or was restarted.
+		c.restartClient()
 	case dbusGeoClueClientLocationUpdated:
 		if len(sig.Body) != 2 {
 			return
@@ -172,7 +277,7 @@ func (c *GeoClueClient) handleSignal(sig *dbus.Signal) {
 		}
 
 		if err := c.handleLocationUpdated(newLocationPath); err != nil {
-			log.Warn("GeoClue: Failed to handle location update: %v", err)
+			log.Warnf("GeoClue: Failed to handle location update: %v", err)
 			return
 		}
 	}
@@ -224,6 +329,7 @@ func (c *GeoClueClient) SeedLocation(loc Location) {
 }
 
 func (c *GeoClueClient) GetLocation() (Location, error) {
+	c.ensureStarted()
 	loc := c.currentLocation()
 	if loc.Latitude != 0 || loc.Longitude != 0 {
 		return loc, nil
