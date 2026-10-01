@@ -52,10 +52,26 @@ in
 
     environment.systemPackages = [ cfg.quickshell.package ] ++ common.packages;
 
-    environment.etc = lib.mapAttrs' (name: value: {
-      name = "xdg/quickshell/dms-plugins/${name}";
-      inherit value;
-    }) common.plugins;
+    environment.etc =
+      lib.mapAttrs' (name: value: {
+        name = "xdg/quickshell/dms-plugins/${name}";
+        inherit value;
+      }) common.plugins
+      // {
+        # Drop-ins replace geoclue's agent whitelist, so the module's defaults are repeated.
+        "geoclue/conf.d/90-dms.conf" = lib.mkIf config.services.geoclue2.enable {
+          text = lib.generators.toINI { } {
+            agent.whitelist = lib.concatStringsSep ";" (
+              lib.optional config.services.geoclue2.enableDemoAgent "geoclue-demo-agent"
+              ++ [
+                "gnome-shell"
+                "io.elementary.desktop.agent-geoclue2"
+                "com.danklinux.dms"
+              ]
+            );
+          };
+        };
+      };
 
     # DMS's bundled U2F fallback stack references pam_u2f.so by name, which NixOS's
     # libpam cannot resolve; the dedicated service below uses the absolute store path

@@ -12,6 +12,7 @@ revision=2
 build_style=go
 build_wrksrc="core"
 hostmakedepends="make tar"
+conf_files="/etc/geoclue/conf.d/90-dms.conf"
 go_import_path="github.com/AvengeMedia/DankMaterialShell/core"
 go_package="${go_import_path}/cmd/dms"
 go_build_tags="distro_binary withshell"
@@ -35,6 +36,7 @@ post_install() {
 	# Desktop entry + icon
 	vinstall "${wrksrc}/assets/dms-open.desktop" 644 usr/share/applications
 	vinstall "${wrksrc}/assets/com.danklinux.dms.desktop" 644 usr/share/applications
+	vinstall "${wrksrc}/assets/geoclue-dms.conf" 644 etc/geoclue/conf.d 90-dms.conf
 	vinstall "${wrksrc}/assets/com.danklinux.dms.notepad.desktop" 644 usr/share/applications
 	vinstall "${wrksrc}/assets/com.danklinux.dms.svg" 644 usr/share/icons/hicolor/scalable/apps
 

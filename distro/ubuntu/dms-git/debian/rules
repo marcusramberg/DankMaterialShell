@@ -67,6 +67,8 @@ override_dh_auto_install:
 		debian/dms-git/usr/share/applications/dms-open.desktop
 	install -Dm644 dms-git-repo/assets/com.danklinux.dms.desktop \
 		debian/dms-git/usr/share/applications/com.danklinux.dms.desktop
+	install -Dm644 dms-git-repo/assets/geoclue-dms.conf \
+		debian/dms-git/etc/geoclue/conf.d/90-dms.conf
 	install -Dm644 dms-git-repo/assets/com.danklinux.dms.notepad.desktop \
 		debian/dms-git/usr/share/applications/com.danklinux.dms.notepad.desktop
 	install -Dm644 dms-git-repo/assets/com.danklinux.dms.svg \

@@ -66,6 +66,10 @@ install -Dm644 assets/systemd/dms.service %{buildroot}%{_userunitdir}/dms.servic
 
 install -Dm644 assets/dms-open.desktop %{buildroot}%{_datadir}/applications/dms-open.desktop
 install -Dm644 assets/com.danklinux.dms.desktop %{buildroot}%{_datadir}/applications/com.danklinux.dms.desktop
+%dir %{_sysconfdir}/geoclue
+%dir %{_sysconfdir}/geoclue/conf.d
+%config(noreplace) %{_sysconfdir}/geoclue/conf.d/90-dms.conf
+install -Dm644 assets/geoclue-dms.conf %{buildroot}%{_sysconfdir}/geoclue/conf.d/90-dms.conf
 install -Dm644 assets/com.danklinux.dms.notepad.desktop %{buildroot}%{_datadir}/applications/com.danklinux.dms.notepad.desktop
 install -Dm644 assets/com.danklinux.dms.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/com.danklinux.dms.svg
 
