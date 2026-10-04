@@ -92,6 +92,9 @@ PanelWindow {
         if (!_open) {
             collapseAll()
             editMode = false
+            // A scan left running time-shares the radio and stutters A2DP.
+            if (BluetoothService.adapter && BluetoothService.adapter.discovering)
+                BluetoothService.adapter.discovering = false
         }
     }
 
