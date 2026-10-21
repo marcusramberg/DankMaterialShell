@@ -54,9 +54,9 @@ PanelWindow {
             if (_startY - mouse.y > 60 && Math.abs(mouse.x - _startX) < 30) {
                 root.openLauncher();
             } else if (_startX - mouse.x > 60 && Math.abs(mouse.y - _startY) < 30) {
-                NiriService.moveColumnRight();
+                NiriService.focusColumnRight();
             } else if (mouse.x - _startX > 60 && Math.abs(mouse.y - _startY) < 30) {
-                NiriService.moveColumnLeft();
+                NiriService.focusColumnLeft();
             }
         }
     }

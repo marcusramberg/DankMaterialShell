@@ -6,7 +6,7 @@ import Quickshell.Wayland
 import qs.Common
 import qs.Services
 import qs.Widgets
-import qs.Modals.DankLauncherV2
+import qs.Modals.DLauncherV2
 
 PanelWindow {
     id: root
@@ -94,7 +94,7 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            color: Theme.popupLayerColor(Theme.surfaceContainer)
+            color: Theme.withAlpha(Theme.surfaceContainer, Theme.popupTransparency)
         }
 
         // Drag handle at top
