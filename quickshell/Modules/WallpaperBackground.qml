@@ -40,7 +40,8 @@ Variants {
 
         visible: root.contentReady && !root.surfaceBounce
 
-        updatesEnabled: root.renderActive || root._settleFrames > 0
+        // Mobile has no other window while DMSShell loads; pausing this one can stall its incubation.
+        updatesEnabled: root.renderActive || root._settleFrames > 0 || (MobileMode.active && !MobileMode.shellLoaded)
 
         Region {
             id: emptyRegion

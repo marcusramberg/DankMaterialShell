@@ -84,5 +84,6 @@ ShellRoot {
     Loader {
         id: dmsShellLoader
         asynchronous: true
+        onLoaded: MobileMode.shellLoaded = true
     }
 }
