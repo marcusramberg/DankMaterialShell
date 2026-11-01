@@ -11,7 +11,7 @@ PanelWindow {
     id: root
 
     WlrLayershell.namespace: "dms:control-center-mobile"
-    WlrLayershell.layer: WlrLayershell.Overlay
+    WlrLayershell.layer: WlrLayershell.Top
     WlrLayershell.exclusiveZone: -1
     // Not exclusive: that starves stacked modals, and the VPN fields still need keys.
     WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None

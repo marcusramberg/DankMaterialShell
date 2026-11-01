@@ -157,7 +157,7 @@ PanelWindow {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: PopoutService.toggleDankDash(1, 0, 0, 0, "", Quickshell.screens[0])
+                    onClicked: PopoutService.toggleDankDash(1, 0, root.height, 0, "", Quickshell.screens[0])
                 }
             }
         }

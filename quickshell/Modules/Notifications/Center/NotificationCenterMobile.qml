@@ -11,7 +11,7 @@ PanelWindow {
     id: root
 
     WlrLayershell.namespace: "dms:notification-center-mobile"
-    WlrLayershell.layer: WlrLayershell.Overlay
+    WlrLayershell.layer: WlrLayershell.Top
     WlrLayershell.exclusiveZone: -1
     // Not exclusive: no key handling here, so a grab only traps keystrokes.
     WlrLayershell.keyboardFocus: _open ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
